@@ -1,0 +1,242 @@
+#include<iostream>
+#include<conio.h>
+#include<string>
+#include <list>
+#include <time.h>
+#include <windows.h>
+#pragma warning(disable : 4996)
+
+using namespace std;
+list <long int> spisok;
+
+class ATMCard;
+
+class Account {
+private:
+	string name;
+	int PIN;
+	int balance;
+	class Transaction {
+	private:
+		string date;
+		int amount;
+		time_t now = time(0);
+		char* dt, * ct;
+	public:
+		Transaction(int am)
+		{
+			dt = ctime(&now);
+			date = dt;
+			amount = am;
+		}
+		bool startTrans(int bal)
+		{
+			if (bal > amount && amount > 0)
+				return true;
+			else return false;
+		}
+		void cancelTrans()
+		{
+			ct = ctime(&now);
+			date = ct;
+			amount = 0;
+		}
+		string getDate()
+		{
+			return date;
+		}
+		int getAmount()
+		{
+			return amount;
+		}
+	};
+	list<Transaction> Trans;
+public:
+	Account(int pin, string name, int bal) {
+		this->PIN = pin;
+		this->name = name;
+		this->balance = bal;
+	}
+	Account()
+	{
+	}
+	string getName()
+	{
+		return name;
+	}
+	int& getBalance()
+	{
+		return this->balance;
+	}
+	int getPIN()
+	{
+		return PIN;
+	}
+	void setBalance(int BAL)
+	{
+		this->balance = BAL;
+	}
+	virtual void calculateInterest()
+	{}
+	void receiveCash(const int amount)
+	{
+		Transaction tr(amount);
+		if (tr.startTrans(balance))
+		{
+
+			this->balance -= amount;
+			cout << "Пожалуйста, заберите свои наличные." << endl;
+
+			Trans.push_back(tr);
+		}
+		else
+		{
+			cout << "Недостаточно средств.";
+			tr.cancelTrans();
+		}
+	}
+
+	int putCash(const int amount)
+	{
+		Transaction tr(amount);
+
+		if (tr.startTrans(balance))
+		{
+			setBalance(balance += amount);
+			cout << "Баланс пополнен." << endl;
+			Trans.push_back(tr);
+		}
+		else
+		{
+			tr.cancelTrans();
+		}
+		return balance;
+	}
+	void printTrans()
+	{
+		list<Transaction>::iterator iter = Trans.begin();
+		while (iter != Trans.end())
+		{
+			Transaction t = *iter;
+			cout << t.getDate() << " " << t.getAmount() << endl;
+			++iter;
+		}
+	}
+
+};
+class ATMCard {
+private:
+	Account account;
+	int PIN;
+	long int ID;
+public:
+	ATMCard()
+	{
+		ID = 88888888;
+		PIN = account.getPIN();
+	}
+	void setAccount(Account acc)
+	{
+		account = acc;
+	}
+	Account& getAccount()
+	{
+		return account;
+	}
+	void setPIN(int PIN)
+	{
+		this->PIN = PIN;
+	}
+	void setID(long int ID)
+	{
+		this->ID = ID;
+	}
+	long int getID()
+	{
+		return ID;
+	}
+	int& getPIN()
+	{
+		return PIN;
+	}
+};
+
+class ATM
+{
+private:
+	string Location = "ул. Профессора Дедюкина, 24";
+	string BranchName = "809508";
+	ATMCard card;
+public:
+	ATM()
+	{
+
+	}
+	string showStreet() {
+		return Location;
+	}
+	string showNumber() {
+		return BranchName;
+	}
+	string setCard(ATMCard cd, int pin) {
+		if (pin == cd.getAccount().getPIN()) {
+			card = cd;
+			return "Добро пожаловать";
+		}
+		else
+		{
+			return " Пока";
+		}
+	}
+	ATMCard& getCard()
+	{
+		return card;
+	}
+
+};
+class CurrentAccount : public Account
+{
+public:
+	CurrentAccount(int pin, string name, int bal)
+		: Account(pin, name, bal)
+	{}
+	void calculateInterest()
+	{
+		setBalance(getBalance() * 2);
+	}
+
+};
+class SavingAccount : public Account
+{
+public:
+	SavingAccount(int pin, string name, int bal)
+		: Account(pin, name, bal)
+	{}
+	void calculateInterest()
+	{
+		setBalance(getBalance() * 3);
+	}
+
+};
+
+int main()
+{
+	setlocale(LC_ALL, "Russian");
+	int PIN;
+	cin >> PIN;
+	ATM atm;
+	ATMCard card;
+	Account account(1235, "imya", 123548);
+	Account acc;
+
+	card.setAccount(account);
+	cout << atm.setCard(card, PIN);
+	cout << "	" << endl;
+	atm.getCard().getAccount().receiveCash(12300);
+	cout << atm.getCard().getAccount().getBalance() << endl;
+	Sleep(1400);
+	atm.getCard().getAccount().putCash(10001);
+	cout << atm.getCard().getAccount().getBalance() << endl;
+	atm.getCard().getAccount().printTrans();
+	return 0;
+}
